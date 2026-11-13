@@ -14,6 +14,15 @@ parser.add_argument("--apk", type=Path)
 args = parser.parse_args()
 project, runtime = ROOT / "app/src/main/assets/project", ROOT / "runtime"
 validate(project, runtime)
+interface = json.loads((project / "interface.json").read_text())
+for resource in interface["resource"]:
+    nodes = set()
+    for directory in resource["path"]:
+        for pipeline in (project / directory / "pipeline").rglob("*.json"):
+            nodes.update(json.loads(pipeline.read_text(encoding="utf-8-sig")))
+    for task in interface["task"]:
+        if not task.get("resource") or resource["name"] in task["resource"]:
+            assert task["entry"] in nodes, f'Missing entry {task["entry"]} for {resource["name"]}'
 binaries = [p for p in runtime.rglob("*") if p.is_file() and (".so" in p.name or p.name == "python3")]
 provided = {p.name for p in binaries}
 system = {"libm.so", "libdl.so", "libc.so", "liblog.so", "libmediandk.so", "libz.so", "libandroid.so"}

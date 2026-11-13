@@ -67,6 +67,15 @@ def prepare(apk=None):
     apk = Path(apk)
     if apk.stat().st_size != lock["size"] or digest(apk) != lock["sha256"]:
         raise ValueError("Upstream APK does not match upstream.lock.json")
+    cached_apk = cache / lock["url"].rsplit("/", 1)[-1]
+    if apk.resolve() != cached_apk.resolve() and (
+        not cached_apk.is_file() or digest(cached_apk) != lock["sha256"]
+    ):
+        imported = cached_apk.with_suffix(".import.part")
+        shutil.copyfile(apk, imported)
+        if digest(imported) != lock["sha256"]:
+            raise ValueError("APK changed while importing into build cache")
+        imported.replace(cached_apk)
     with tempfile.TemporaryDirectory(prefix="prepare-", dir=cache) as temporary:
         staging = Path(temporary)
         project, runtime = staging / "project", staging / "runtime"
