@@ -1,0 +1,11 @@
+{
+  "repository": "https://github.com/xlxyvergil/MaaFgo",
+  "tag": "v2.0.25",
+  "commit": "97b3c755e4f421ba3964d60f6e11284ecf7a4afe",
+  "url": "https://github.com/xlxyvergil/MaaFgo/releases/download/v2.0.25/MaaFGO-android-arm64-v8a-v2.0.25.apk",
+  "sha256": "62124b9cffcc8765ba2d20cd81ed6cda214916d385e2d2829e10d4325fb42ef5",
+  "size": 343674238,
+  "maafw": "5.14.3",
+  "python": "3.13.15",
+  "abi": "arm64-v8a"
+}

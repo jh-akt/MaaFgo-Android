@@ -1,0 +1,14 @@
+{
+  "project_id": "maa-fgo",
+  "display_name": "MaaFgo Android",
+  "default_resource_id": "B服(小米/应用宝服)",
+  "default_task_id": "登录",
+  "supported_controllers": ["adb"],
+  "attach_resource_paths": [],
+  "bundled_resource_path": "project",
+  "virtual_display_dpi": 240,
+  "resource_package_names": {
+    "B服(小米/应用宝服)": "com.bilibili.fatego/.UnityPlayerNativeActivity",
+    "日服": "com.aniplex.fategrandorder"
+  }
+}
