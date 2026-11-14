@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import re
 import subprocess
+import sys
 import tempfile
 import zipfile
 from prepare_upstream import ROOT, validate
@@ -43,6 +44,8 @@ for source in (project / "agent").rglob("*.py"):
     compile(source.read_bytes(), str(source.relative_to(project)), "exec")
 
 if args.apk:
+    subprocess.run([sys.executable, str(ROOT / "MaaFramework-Android/tools/verify_android_elf.py"),
+                    "--apk", str(args.apk)], check=True)
     with zipfile.ZipFile(args.apk) as apk:
         assert apk.testzip() is None
         for library in (runtime / "maafw").glob("*.so"):
