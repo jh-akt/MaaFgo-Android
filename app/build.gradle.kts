@@ -122,6 +122,8 @@ val prepareFgoPayload by tasks.registering(Exec::class) {
     commandLine("python3", "tools/prepare_upstream.py")
     inputs.file(rootProject.file("upstream.lock.json"))
     inputs.file(rootProject.file("tools/prepare_upstream.py"))
+    inputs.file(rootProject.file("tools/android_main_story.json"))
+    inputs.file(rootProject.file("tools/android_jp_battle.json"))
     outputs.dir(rootProject.file("runtime"))
     outputs.dir(file("src/main/assets/project"))
 }

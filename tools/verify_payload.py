@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check the prepared Android payload and optionally the assembled APK (no device required)."""
 import argparse
+import binascii
 import json
 from pathlib import Path
 import re
@@ -46,7 +47,8 @@ for source in (project / "agent").rglob("*.py"):
 if args.apk:
     subprocess.run([sys.executable, str(ROOT / "MaaFramework-Android/tools/verify_android_elf.py"),
                     "--apk", str(args.apk)], check=True)
-    with zipfile.ZipFile(args.apk) as apk:
+    # Android ZIP entries use UTF-8 even when the language-encoding flag is unset.
+    with zipfile.ZipFile(args.apk, metadata_encoding="utf-8") as apk:
         assert apk.testzip() is None
         for library in (runtime / "maafw").glob("*.so"):
             # AGP strips debug sections in jniLibs, so compare dynamic ABI, not file bytes.
@@ -59,11 +61,14 @@ if args.apk:
                     return {line.split()[-1] for line in output.splitlines() if line.strip()}
                 assert exported(extracted.name) == exported(library), library.name
         for root, prefix in ((project, "assets/project/"), (runtime, "assets/bundled_runtime/")):
-            for relative in (
-                ["interface.json", "agent/android_entry.py", "agent/main.py", "agent/utils/support_det.onnx", "agent/utils/quest_detect.onnx"]
-                if root == project else
-                ["python/bin/python3", "python/lib/libpython3.13.so", "python/lib/python3.13/site-packages/cv2.so", "python/lib/python3.13/site-packages/maa/agent/agent_server.py"]
-            ):
-                assert apk.read(prefix + relative) == (root / relative).read_bytes(), relative
+            # Check the complete payload, including underscore-prefixed Python packages.
+            # AAPT silently omits those directories with its default asset filters.
+            for path in root.rglob("*"):
+                relative = path.relative_to(root)
+                if not path.is_file() or any(part.startswith(".") for part in relative.parts):
+                    continue
+                info = apk.getinfo(prefix + relative.as_posix())
+                assert info.file_size == path.stat().st_size, relative
+                assert info.CRC == binascii.crc32(path.read_bytes()), relative
         assert not any(name.startswith("lib/") and not name.startswith("lib/arm64-v8a/") for name in apk.namelist())
 print(f"Verified {len(binaries)} ARM64 binaries, {len(calls)} Maa symbols, agent syntax" + (" and APK payload" if args.apk else ""))

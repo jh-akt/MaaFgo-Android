@@ -18,6 +18,51 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 MARKER = ".maafgo-generated.json"
+LOADING_TIMEOUT_SECONDS = 1800
+
+
+def adapt_loading_waits(project):
+    """Allow on-demand game downloads without changing click/retry budgets."""
+    loading_nodes = {
+        "打开游戏", "自动登录", "自动登录2", "自动登录_蓝屏检测继续",
+        "直到达到主界面", "确认抵达主界面流程", "登录流程持续识别",
+        "进本流程", "进本-实际点击队伍确认", "进本-开始后弹窗检查",
+        "进本-开始按钮已消失", "进本-等待战斗主界面或剧情",
+    }
+    for path in (project / "resource").rglob("pipeline/*.json"):
+        nodes = json.loads(path.read_text(encoding="utf-8-sig"))
+        changed = False
+        for name, node in nodes.items():
+            if name in loading_nodes:
+                node["timeout"] = LOADING_TIMEOUT_SECONDS * 1000
+                changed = True
+            if name == "主线-配置":
+                node.setdefault("attach", {})["transition_timeout"] = LOADING_TIMEOUT_SECONDS
+                changed = True
+        if changed:
+            path.write_text(json.dumps(nodes, ensure_ascii=False, indent=2) + "\n")
+
+    # Pin each source replacement: upstream changes must be reviewed, not silently
+    # packaged with a timeout that its Python validator rejects.
+    replacements = {
+        "agent/custom/main_story_action.py": {
+            "not 10 <= self.timeout <= 600": "not 10 <= self.timeout <= 3600",
+            "until = self.clock() + 5": "until = self.clock() + self.timeout",
+        },
+        "agent/battle/runtime/runtime.py": {
+            "_ANIMATION_TIMEOUT_S = 120.0": f"_ANIMATION_TIMEOUT_S = {LOADING_TIMEOUT_SECONDS}.0",
+            "_UNKNOWN_TIMEOUT_S = 30.0": f"_UNKNOWN_TIMEOUT_S = {LOADING_TIMEOUT_SECONDS}.0",
+        },
+    }
+    for relative, changes in replacements.items():
+        path = project / relative
+        source = path.read_text()
+        for old, new in changes.items():
+            if source.count(old) != 1:
+                raise ValueError(f"Upstream loading wait changed: {relative}: {old}")
+            source = source.replace(old, new)
+        compile(source, relative, "exec")
+        path.write_text(source)
 
 
 def digest(path):
@@ -120,6 +165,25 @@ runpy.run_path(str(Path(__file__).with_name("main.py")), run_name="__main__")
 ''')
         interface = json.loads((project / "interface.json").read_text())
         interface["agent"] = {"child_exec": "python3", "child_args": ["-u", "agent/android_entry.py"]}
+        # Login ends at the terminal. Bridge that screen into the upstream map-based
+        # story runner, while retaining its formation/map entry and no-refill policy.
+        for task in interface["task"]:
+            if task["name"] == "自动推主线（beta）":
+                assert task["entry"] == "自动推主线调度"
+                task["entry"] = "Android主线入口"
+                task["description"] = task["description"].replace("从主线地图", "从终端、主线地图")
+        shutil.copy2(ROOT / "tools/android_main_story.json",
+                     project / "resource/base/pipeline/Android主线入口.json")
+        # JP's continue screen differs from the base Chinese defeat template.
+        # Merge into one file: duplicate node names in a resource bundle are invalid.
+        jp_battle = project / "resource/jp/pipeline/自动战斗_感知.json"
+        jp_nodes = json.loads(jp_battle.read_text()) if jp_battle.exists() else {}
+        overrides = json.loads((ROOT / "tools/android_jp_battle.json").read_text())
+        if jp_nodes.keys() & overrides.keys():
+            raise ValueError("Upstream now defines JP defeat recognition; review Android overrides")
+        jp_nodes.update(overrides)
+        jp_battle.write_text(json.dumps(jp_nodes, ensure_ascii=False, indent=2) + "\n")
+        adapt_loading_waits(project)
         (project / "interface.json").write_text(json.dumps(interface, ensure_ascii=False, indent=2) + "\n")
         # Preserve the upstream locale in the path understood by the shared catalog.
         locale = project / "i18n/zh_cn.json"
@@ -143,6 +207,8 @@ def validate(project, runtime):
         runtime / "python/bin/python3", runtime / "python/lib/libpython3.13.so",
         runtime / "python/lib/python3.13/site-packages/cv2.so",
         runtime / "python/lib/python3.13/site-packages/maa/agent/agent_server.py",
+        runtime / "python/lib/python3.13/site-packages/numpy/_utils/__init__.py",
+        runtime / "python/lib/python3.13/site-packages/numpy/_core/__init__.py",
         runtime / "maafw/libMaaFramework.so", runtime / "maafw/libMaaAgentClient.so",
         runtime / "maafw/libMaaAgentServer.so", runtime / "maafw/libonnxruntime.so",
         runtime / "maafw/libMaaAndroidNativeControlUnit.so",

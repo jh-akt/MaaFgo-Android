@@ -1,0 +1,35 @@
+{
+  "Android主线入口": {
+    "next": ["Android主线-终端", "自动推主线调度"],
+    "on_error": []
+  },
+  "Android主线-终端": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {"template": "main_ui.png", "roi": [0, 0, 190, 90], "threshold": 0.8}
+    },
+    "next": ["Android主线-终端NEXT", "[JumpBack]Android主线-终端滚动"],
+    "on_error": []
+  },
+  "Android主线-终端NEXT": {
+    "recognition": {
+      "type": "OCR",
+      "param": {"expected": ["^NEXT$"], "roi": [650, 100, 600, 460]}
+    },
+    "action": {"type": "Click", "param": {"target": true, "target_offset": [0, 40, 0, 0]}},
+    "post_delay": 2000,
+    "next": ["自动推主线调度"],
+    "on_error": [],
+    "focus": {"Node.Action.Starting": "从终端进入当前主线章节"}
+  },
+  "Android主线-终端滚动": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {"template": "main_ui.png", "roi": [0, 0, 190, 90], "threshold": 0.8}
+    },
+    "action": {"type": "Swipe", "param": {"begin": [1130, 550, 1, 1], "end": [1130, 240, 1, 1], "duration": 700}},
+    "max_hit": 6,
+    "post_delay": 1000,
+    "on_error": []
+  }
+}
