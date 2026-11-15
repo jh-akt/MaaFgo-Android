@@ -62,7 +62,7 @@ Gradle 自动下载并验证锁定的上游 APK，再生成 `runtime/` 和
 已有上游 APK 时可先执行：
 
 ```bash
-python3 tools/prepare_upstream.py --apk /path/to/MaaFGO-android-arm64-v8a-v2.0.25.apk
+python3 tools/prepare_upstream.py --apk .cache/MaaFGO-android-arm64-v8a-v2.0.25.apk
 ```
 
 验证脚本需要 `binutils`（`readelf`、`nm`）。生成内容和缓存不会提交 Git。
