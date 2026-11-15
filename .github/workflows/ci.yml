@@ -26,6 +26,7 @@ jobs:
         with:
           path: .cache/*.apk
           key: fgo-upstream-${{ hashFiles('upstream.lock.json') }}
+      - run: python3 -m unittest discover -s tools -p 'test_*.py'
       - run: ./gradlew :app:assembleDebug :app:testDebugUnitTest :framework:testDebugUnitTest :framework-host:testDebugUnitTest --no-daemon
       - run: python3 tools/verify_payload.py --apk app/build/outputs/apk/debug/app-debug.apk
       - uses: actions/upload-artifact@v4
