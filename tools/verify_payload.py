@@ -9,7 +9,7 @@ import subprocess
 import sys
 import tempfile
 import zipfile
-from prepare_upstream import ROOT, validate
+from prepare_upstream import ROOT, OVERLAY, validate
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--apk", type=Path)
@@ -50,6 +50,7 @@ if args.apk:
     # Android ZIP entries use UTF-8 even when the language-encoding flag is unset.
     with zipfile.ZipFile(args.apk, metadata_encoding="utf-8") as apk:
         assert apk.testzip() is None
+        assert apk.read("assets/maa_project_manifest.json") == (ROOT / "app/src/main/assets/maa_project_manifest.json").read_bytes()
         for library in (runtime / "maafw").glob("*.so"):
             # AGP strips debug sections in jniLibs, so compare dynamic ABI, not file bytes.
             assert apk.read("assets/bundled_runtime/maafw/" + library.name) == library.read_bytes(), library.name
@@ -60,7 +61,7 @@ if args.apk:
                     output = subprocess.check_output(["nm", "-D", "--defined-only", str(path)], text=True)
                     return {line.split()[-1] for line in output.splitlines() if line.strip()}
                 assert exported(extracted.name) == exported(library), library.name
-        for root, prefix in ((project, "assets/project/"), (runtime, "assets/bundled_runtime/")):
+        for root, prefix in ((project, "assets/project/"), (runtime, "assets/bundled_runtime/"), (OVERLAY, "assets/project_overlay/")):
             # Check the complete payload, including underscore-prefixed Python packages.
             # AAPT silently omits those directories with its default asset filters.
             for path in root.rglob("*"):

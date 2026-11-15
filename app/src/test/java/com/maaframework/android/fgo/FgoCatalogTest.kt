@@ -4,6 +4,9 @@ import com.maaframework.android.catalog.InterfaceCatalogLoader
 import com.maaframework.android.catalog.TaskOptionSupport
 import com.maaframework.android.host.MaaHostViewModel
 import com.maaframework.android.project.MaaProjectManifest
+import com.maaframework.android.runtime.ProjectLocalOverlay
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
 import kotlinx.serialization.json.Json
 import org.junit.Assert.*
@@ -24,6 +27,15 @@ class FgoCatalogTest {
         assertEquals(240, manifest.virtualDisplayDpi)
         assertEquals("com.bilibili.fatego/.UnityPlayerNativeActivity", manifest.packageNameFor(manifest.defaultResourceId))
         assertEquals("com.aniplex.fategrandorder", manifest.packageNameFor("日服"))
+    }
+
+    @Test fun `bundled payload and online updater share the local overlay`() {
+        val overlay = ProjectLocalOverlay { File(assets, "${manifest.localOverlayPath}/$it").readBytes() }
+        val marker = Json.parseToJsonElement(File(assets, "project/.maafgo-generated.json").readText()).jsonObject
+        assertEquals(marker.getValue("overlay_sha256").jsonPrimitive.content, overlay.fingerprint())
+        assertEquals(marker.getValue("tag").jsonPrimitive.content, manifest.githubRelease!!.bundledVersion)
+        assertTrue(File(assets, "project/agent/battle/runtime/runtime.py").readText().contains("default_target=1,"))
+        assertTrue(manifest.hasResourceUpdateSource())
     }
 
     @Test fun `server options and translated presets survive host parsing`() {

@@ -1,0 +1,221 @@
+{
+  "version": 1,
+  "operations": [
+    {
+      "op": "copy",
+      "file": "agent/android_entry.py",
+      "asset": "android_entry.py"
+    },
+    {
+      "op": "json_set",
+      "file": "interface.json",
+      "path": [
+        "agent"
+      ],
+      "value": {
+        "child_exec": "python3",
+        "child_args": [
+          "-u",
+          "agent/android_entry.py"
+        ]
+      }
+    },
+    {
+      "op": "json_set",
+      "file": "interface.json",
+      "path": [
+        "task",
+        "@name=自动推主线（beta）",
+        "entry"
+      ],
+      "expected": "自动推主线调度",
+      "value": "Android主线入口"
+    },
+    {
+      "op": "json_text",
+      "file": "interface.json",
+      "path": [
+        "task",
+        "@name=自动推主线（beta）",
+        "description"
+      ],
+      "old": "从主线地图",
+      "new": "从终端、主线地图"
+    },
+    {
+      "op": "copy",
+      "file": "resource/base/pipeline/Android主线入口.json",
+      "asset": "android_main_story.json"
+    },
+    {
+      "op": "json_merge",
+      "file": "resource/jp/pipeline/自动战斗_感知.json",
+      "path": [],
+      "new_keys_only": true,
+      "value": {
+        "战斗_失败_常规": {
+          "doc": "日服续关页：同时确认标题、撤退文字和亮白按钮。仅识别，不消费道具；排除确认弹窗后方变暗的按钮。",
+          "recognition": {
+            "type": "And",
+            "param": {
+              "all_of": [
+                {
+                  "recognition": {
+                    "type": "OCR",
+                    "param": {
+                      "roi": [
+                        490,
+                        110,
+                        310,
+                        65
+                      ],
+                      "expected": [
+                        "^コンティニュー$"
+                      ],
+                      "threshold": 0.8
+                    }
+                  }
+                },
+                {
+                  "recognition": {
+                    "type": "ColorMatch",
+                    "param": {
+                      "roi": [
+                        520,
+                        370,
+                        245,
+                        55
+                      ],
+                      "method": 4,
+                      "lower": [
+                        210,
+                        210,
+                        210
+                      ],
+                      "upper": [
+                        255,
+                        255,
+                        255
+                      ],
+                      "count": 7000
+                    }
+                  }
+                },
+                {
+                  "recognition": {
+                    "type": "OCR",
+                    "param": {
+                      "roi": [
+                        540,
+                        375,
+                        205,
+                        50
+                      ],
+                      "expected": [
+                        "^撤退する$"
+                      ],
+                      "threshold": 0.8
+                    }
+                  }
+                }
+              ],
+              "box_index": 2
+            }
+          }
+        },
+        "战斗失败_不回主界面": {
+          "recognition": {
+            "type": "And",
+            "param": {
+              "all_of": [
+                "战斗_失败_常规"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "op": "json_nodes",
+      "files": "resource/.*/pipeline/[^/]+\\.json",
+      "value": {
+        "打开游戏": {
+          "timeout": 1800000
+        },
+        "自动登录": {
+          "timeout": 1800000
+        },
+        "自动登录2": {
+          "timeout": 1800000
+        },
+        "自动登录_蓝屏检测继续": {
+          "timeout": 1800000
+        },
+        "直到达到主界面": {
+          "timeout": 1800000
+        },
+        "确认抵达主界面流程": {
+          "timeout": 1800000
+        },
+        "登录流程持续识别": {
+          "timeout": 1800000
+        },
+        "进本流程": {
+          "timeout": 1800000
+        },
+        "进本-实际点击队伍确认": {
+          "timeout": 1800000
+        },
+        "进本-开始后弹窗检查": {
+          "timeout": 1800000
+        },
+        "进本-开始按钮已消失": {
+          "timeout": 1800000
+        },
+        "进本-等待战斗主界面或剧情": {
+          "timeout": 1800000
+        },
+        "主线-配置": {
+          "attach": {
+            "transition_timeout": 1800
+          }
+        }
+      }
+    },
+    {
+      "op": "text",
+      "file": "agent/custom/main_story_action.py",
+      "old": "not 10 <= self.timeout <= 600",
+      "new": "not 10 <= self.timeout <= 3600"
+    },
+    {
+      "op": "text",
+      "file": "agent/custom/main_story_action.py",
+      "old": "until = self.clock() + 5",
+      "new": "until = self.clock() + self.timeout"
+    },
+    {
+      "op": "text",
+      "file": "agent/battle/runtime/runtime.py",
+      "old": "_ANIMATION_TIMEOUT_S = 120.0",
+      "new": "_ANIMATION_TIMEOUT_S = 1800.0"
+    },
+    {
+      "op": "text",
+      "file": "agent/battle/runtime/runtime.py",
+      "old": "_UNKNOWN_TIMEOUT_S = 30.0",
+      "new": "_UNKNOWN_TIMEOUT_S = 1800.0"
+    },
+    {
+      "op": "text",
+      "file": "agent/battle/runtime/runtime.py",
+      "old": "                    default_target=sk.servant_slot,",
+      "new": "                    default_target=1,"
+    },
+    {
+      "op": "copy_project",
+      "file": "locales/interface/zh_cn.json",
+      "source": "i18n/zh_cn.json"
+    }
+  ]
+}

@@ -8,7 +8,7 @@
         android:label="@string/app_name"
         android:roundIcon="@drawable/fgo_icon"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MaaFrameworkAndroid.Sample">
+        android:theme="@style/Theme.MaaFrameworkAndroid.Host">
 
         <activity
             android:name=".MainActivity"

@@ -3,12 +3,125 @@
   "display_name": "MaaFgo Android",
   "default_resource_id": "B服(小米/应用宝服)",
   "default_task_id": "登录",
-  "supported_controllers": ["adb"],
+  "supported_controllers": [
+    "adb"
+  ],
   "attach_resource_paths": [],
   "bundled_resource_path": "project",
   "virtual_display_dpi": 240,
   "resource_package_names": {
     "B服(小米/应用宝服)": "com.bilibili.fatego/.UnityPlayerNativeActivity",
     "日服": "com.aniplex.fategrandorder"
+  },
+  "local_overlay_path": "project_overlay",
+  "github_release": {
+    "owner": "xlxyvergil",
+    "repo": "MaaFgo",
+    "asset_pattern": "MaaFGO-android-arm64-v8a-v[^/]+\\.apk",
+    "bundled_version": "v2.0.25",
+    "mappings": [
+      {
+        "archives": [
+          "assets/pi.zip"
+        ],
+        "source": "",
+        "target": ""
+      },
+      {
+        "archives": [
+          "assets/agent/bundle.zip"
+        ],
+        "source": "arm64-v8a/prefix/",
+        "target": "python"
+      },
+      {
+        "archives": [
+          "assets/agent/bundle.zip"
+        ],
+        "source": "arm64-v8a/bin/",
+        "target": "python/bin"
+      },
+      {
+        "archives": [
+          "assets/agent/bundle.zip"
+        ],
+        "source": "arm64-v8a/site-packages/",
+        "target": "python/lib/python3.13/site-packages",
+        "exclude": "pure\\.zip"
+      },
+      {
+        "archives": [
+          "assets/agent/bundle.zip",
+          "arm64-v8a/site-packages/pure.zip"
+        ],
+        "source": "",
+        "target": "python/lib/python3.13/site-packages"
+      },
+      {
+        "archives": [
+          "assets/agent/bundle.zip"
+        ],
+        "source": "arm64-v8a/agent-core.json",
+        "target": "agent-core.json"
+      },
+      {
+        "archives": [
+          "assets/agent/bundle.zip"
+        ],
+        "source": "arm64-v8a/licenses/",
+        "target": "licenses"
+      },
+      {
+        "source": "lib/arm64-v8a/",
+        "target": "maafw",
+        "include": "(libMaa[^/]+|libc\\+\\+_shared|libonnxruntime|libopencv_world4|libfastdeploy_ppocr)\\.so"
+      }
+    ],
+    "checks": [
+      {
+        "file": "agent-core.json",
+        "path": [
+          "abi"
+        ],
+        "expected": "arm64-v8a"
+      },
+      {
+        "file": "agent-core.json",
+        "path": [
+          "python"
+        ],
+        "expected": "3.13.15"
+      },
+      {
+        "file": "agent-core.json",
+        "path": [
+          "provides",
+          "maafw"
+        ],
+        "expected": "5.14.3"
+      }
+    ],
+    "required_paths": [
+      "interface.json",
+      "agent/main.py",
+      "agent/utils/support_det.onnx",
+      "agent/utils/quest_detect.onnx",
+      "resource/base/model/ocr/rec.onnx",
+      "resource/base/model/ocr/det.onnx",
+      "python/bin/python3",
+      "python/lib/libpython3.13.so",
+      "python/lib/python3.13/site-packages/cv2.so",
+      "python/lib/python3.13/site-packages/maa/agent/agent_server.py",
+      "python/lib/python3.13/site-packages/numpy/_utils/__init__.py",
+      "python/lib/python3.13/site-packages/numpy/_core/__init__.py",
+      "maafw/libMaaFramework.so",
+      "maafw/libMaaAgentClient.so",
+      "maafw/libMaaAgentServer.so",
+      "maafw/libMaaAndroidNativeControlUnit.so",
+      "maafw/libonnxruntime.so"
+    ],
+    "executable_paths": [
+      "python/bin/python3"
+    ]
   }
 }

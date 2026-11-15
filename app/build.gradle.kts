@@ -24,8 +24,8 @@ android {
         applicationId = "com.maaframework.android.fgo"
         minSdk = 30
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
@@ -121,9 +121,10 @@ val prepareFgoPayload by tasks.registering(Exec::class) {
     workingDir(rootProject.projectDir)
     commandLine("python3", "tools/prepare_upstream.py")
     inputs.file(rootProject.file("upstream.lock.json"))
+    inputs.file(file("src/main/assets/maa_project_manifest.json"))
     inputs.file(rootProject.file("tools/prepare_upstream.py"))
-    inputs.file(rootProject.file("tools/android_main_story.json"))
-    inputs.file(rootProject.file("tools/android_jp_battle.json"))
+    inputs.dir(file("src/main/assets/project_overlay"))
+    inputs.file(rootProject.file("MaaFramework-Android/tools/project_overlay.py"))
     outputs.dir(rootProject.file("runtime"))
     outputs.dir(file("src/main/assets/project"))
 }
